@@ -1,22 +1,6 @@
 # Auto-labeling configuration for PRs
 # Used by actions/labeler
 
-category/document-processing:
-  - changed-files:
-    - any-glob-to-any-file: 'skills/**/document-processing/**'
-
-category/development-tools:
-  - changed-files:
-    - any-glob-to-any-file: 'skills/**/development-tools/**'
-
-category/creative-design:
-  - changed-files:
-    - any-glob-to-any-file: 'skills/**/creative-design/**'
-
-category/database:
-  - changed-files:
-    - any-glob-to-any-file: 'skills/**/database/**'
-
 internal-skill:
   - changed-files:
     - any-glob-to-any-file: 'skills/openagentskills/**'

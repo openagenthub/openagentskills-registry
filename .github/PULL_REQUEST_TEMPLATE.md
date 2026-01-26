@@ -11,7 +11,8 @@
 - [ ] SKILL.md exists at the specified source path
 
 **For Internal Skills (openagentskills):**
-- [ ] SKILL.md exists at `/openagentskills/{skill-name}/SKILL.md`
+- [ ] YAML pointer at `skills/openagentskills/{skill-name}/skill.yaml`
+- [ ] SKILL.md at `openagentskills/{skill-name}/SKILL.md`
 - [ ] SKILL.md follows [agentskills.io specification](https://agentskills.io/specification)
 
 ### Skill Information

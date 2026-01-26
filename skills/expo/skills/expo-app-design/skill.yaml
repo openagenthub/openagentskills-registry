@@ -7,8 +7,8 @@ source:
   ref: main
 
 categories:
-  - development-tools
-  - deployment
+  - development
+  - cloud-services
 
 tags:
   - expo

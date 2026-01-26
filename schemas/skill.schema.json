@@ -33,8 +33,8 @@
         {
           "properties": {
             "type": { 
-              "const": "local",
-              "description": "Skill content is in the openagentskills/ directory of this registry"
+              "const": "internal",
+              "description": "Skill content is in the openagentskills/ directory of this registry (SKILL.md in same dir as skill.yaml)"
             }
           },
           "required": ["type"]
@@ -47,16 +47,16 @@
       "items": {
         "type": "string",
         "enum": [
-          "document-processing",
-          "creative-design",
-          "development-tools",
-          "data-analysis",
-          "integrations",
+          "development",
+          "databases",
+          "cloud-services",
           "productivity",
+          "marketing",
+          "creativity",
+          "data-analytics",
+          "integrations",
           "communication",
-          "database",
-          "deployment",
-          "testing"
+          "documents"
         ]
       },
       "minItems": 1,

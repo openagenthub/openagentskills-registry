@@ -18,79 +18,56 @@ This repository contains the skill registry for [Open Agent Skills](https://open
 
 ```
 openagentskills-registry/
-├── skills/                    # All skill YAML pointers
-│   ├── anthropics/skills/     # External: Anthropic's skills
-│   ├── vercel-labs/agent-skills/
-│   ├── supabase/agent-skills/
-│   ├── expo/skills/
-│   └── openagentskills/       # Internal skill pointers
-├── openagentskills/           # Our actual skill content (SKILL.md)
-├── schemas/                   # JSON Schema for validation
-├── dist/                      # Generated index (auto-committed)
-├── worker/                    # Cloudflare Worker for validation
-└── scripts/                   # Build and validation scripts
+├── skills/                        # Skill YAML pointers (see skills/README.md)
+├── openagentskills/               # Internal skill implementations (see openagentskills/README.md)
+├── schemas/                       # JSON Schema for validation
+├── dist/                          # Generated index (auto-committed)
+├── worker/                        # Cloudflare Worker for validation
+└── scripts/                       # Build and validation scripts
 ```
 
-## Adding a Skill
+| Directory | Contents | Documentation |
+|-----------|----------|---------------|
+| [`skills/`](skills/) | All `skill.yaml` registration files | [skills/README.md](skills/README.md) |
+| [`openagentskills/`](openagentskills/) | Internal skill implementations (`SKILL.md`) | [openagentskills/README.md](openagentskills/README.md) |
 
-### External Skill (from another repo)
+## Quick Start
 
-1. Create `skills/{org}/{repo}/{skill-name}/skill.yaml`:
-
-```yaml
-source:
-  type: external
-  path: path/to/skill  # Path to SKILL.md directory in source repo
-  ref: main            # Git ref (optional, defaults to main)
-
-categories:
-  - development-tools  # 1-3 categories
-
-tags:
-  - react
-  - performance       # 1-5 tags
-```
-
-### Internal Skill (in this repo)
-
-1. Create skill content at `openagentskills/{skill-name}/SKILL.md`
-2. Create `skills/openagentskills/{skill-name}/skill.yaml`:
-
-```yaml
-source:
-  type: local
-
-categories:
-  - development-tools
-
-tags:
-  - git
-  - workflow
-```
-
-### Submit a PR
+### Add an External Skill
 
 ```bash
-git checkout -b feat/add-my-skill
-git add .
-git commit -m "feat(skills): add org/repo/skill-name"
-git push origin feat/add-my-skill
+mkdir -p skills/{org}/{repo}/{skill-name}
+# Create skill.yaml (see skills/README.md for schema)
+git commit -m "feat(skills): add {org}/{repo}/{skill-name}"
 ```
+
+### Add an Internal Skill
+
+```bash
+mkdir -p skills/openagentskills/{skill-name}
+mkdir -p openagentskills/{skill-name}
+# Create skill.yaml pointer + SKILL.md implementation
+git commit -m "feat(skills): add openagentskills/{skill-name}"
+```
+
+See [skills/README.md](skills/README.md) and [openagentskills/README.md](openagentskills/README.md) for detailed instructions.
 
 ## Categories
 
 | Category | Description |
 |----------|-------------|
-| `document-processing` | PDFs, Word docs, spreadsheets |
-| `creative-design` | Images, SVGs, UI components |
-| `development-tools` | Code, git, testing, deployment |
-| `data-analysis` | Data processing, visualization |
-| `integrations` | MCP servers, APIs, services |
-| `productivity` | Task management, automation |
-| `communication` | Email, documentation, writing |
-| `database` | SQL, NoSQL, query optimization |
-| `deployment` | CI/CD, cloud, infrastructure |
-| `testing` | Unit tests, integration, automation |
+| `development` | Code generation, APIs, git workflows, testing, debugging |
+| `databases` | SQL, NoSQL, queries, migrations, optimization |
+| `cloud-services` | AWS, GCP, Azure, deployment, infrastructure |
+| `productivity` | Task management, automation, workflows, time-saving |
+| `marketing` | SEO, social media, content strategy, analytics, campaigns |
+| `creativity` | Design, images, writing, video, audio, content creation |
+| `data-analytics` | Charts, reports, insights, visualization, data processing |
+| `integrations` | Third-party APIs, webhooks, connectors, services |
+| `communication` | Email, chat, documentation, collaboration |
+| `documents` | PDFs, Word docs, Excel, presentations, file conversion |
+
+See [categories.yaml](categories.yaml) for full definitions.
 
 ## Local Development
 

@@ -1,40 +1,40 @@
 {
   "version": "1.0.0",
-  "generatedAt": "2026-01-26T18:56:19.388Z",
+  "generatedAt": "2026-01-26T22:51:32.483Z",
   "totalSkills": 9,
   "categories": [
     {
-      "id": "development-tools",
-      "name": "Development Tools",
-      "description": "Code generation, git workflows, testing, and deployment",
+      "id": "development",
+      "name": "Development",
+      "description": "Code generation, APIs, git workflows, testing, and debugging",
       "icon": "code",
       "count": 7
     },
     {
-      "id": "document-processing",
-      "name": "Document Processing",
-      "description": "Work with PDFs, Word docs, spreadsheets, and presentations",
+      "id": "documents",
+      "name": "Documents",
+      "description": "PDFs, Word docs, Excel, presentations, and file conversion",
       "icon": "file-text",
       "count": 2
     },
     {
-      "id": "creative-design",
-      "name": "Creative & Design",
-      "description": "Generate images, SVGs, UI components, and visual content",
+      "id": "creativity",
+      "name": "Creativity",
+      "description": "Design, images, writing, video, audio, and content creation",
       "icon": "palette",
       "count": 2
     },
     {
-      "id": "deployment",
-      "name": "Deployment",
-      "description": "CI/CD, cloud platforms, infrastructure as code",
+      "id": "cloud-services",
+      "name": "Cloud Services",
+      "description": "AWS, GCP, Azure, deployment, and infrastructure",
       "icon": "cloud",
       "count": 1
     },
     {
-      "id": "database",
-      "name": "Database",
-      "description": "SQL, NoSQL, query optimization, schema design",
+      "id": "databases",
+      "name": "Databases",
+      "description": "SQL, NoSQL, queries, migrations, and optimization",
       "icon": "database",
       "count": 1
     }
@@ -46,7 +46,7 @@
       "name": "api-design",
       "description": "Design and implement RESTful APIs with best practices for naming, versioning, error handling, and documentation. Use this skill when building backend services.",
       "categories": [
-        "development-tools"
+        "development"
       ],
       "tags": [
         "api",
@@ -55,7 +55,7 @@
         "http"
       ],
       "source": {
-        "type": "local"
+        "type": "internal"
       },
       "license": "MIT",
       "repoUrl": "https://github.com/openagenthub/openagentskills-registry",
@@ -69,7 +69,7 @@
       "name": "docx",
       "description": "",
       "categories": [
-        "document-processing"
+        "documents"
       ],
       "tags": [
         "word",
@@ -96,8 +96,8 @@
       "name": "expo-app-design",
       "description": "",
       "categories": [
-        "development-tools",
-        "deployment"
+        "development",
+        "cloud-services"
       ],
       "tags": [
         "expo",
@@ -124,8 +124,8 @@
       "name": "frontend-design",
       "description": "Create beautiful, responsive frontend interfaces with modern CSS and Tailwind. Use this skill when building UI components, styling pages, or implementing responsive layouts.",
       "categories": [
-        "development-tools",
-        "creative-design"
+        "development",
+        "creativity"
       ],
       "tags": [
         "frontend",
@@ -135,7 +135,7 @@
         "responsive"
       ],
       "source": {
-        "type": "local"
+        "type": "internal"
       },
       "license": "MIT",
       "repoUrl": "https://github.com/openagenthub/openagentskills-registry",
@@ -149,7 +149,7 @@
       "name": "git-workflow",
       "description": "Expert Git workflow assistance including branching strategies, commit conventions, rebasing, and conflict resolution. Use this skill when working with version control.",
       "categories": [
-        "development-tools"
+        "development"
       ],
       "tags": [
         "git",
@@ -158,7 +158,7 @@
         "commits"
       ],
       "source": {
-        "type": "local"
+        "type": "internal"
       },
       "license": "MIT",
       "repoUrl": "https://github.com/openagenthub/openagentskills-registry",
@@ -172,7 +172,7 @@
       "name": "pdf",
       "description": "",
       "categories": [
-        "document-processing"
+        "documents"
       ],
       "tags": [
         "pdf",
@@ -199,7 +199,7 @@
       "name": "react-best-practices",
       "description": "",
       "categories": [
-        "development-tools"
+        "development"
       ],
       "tags": [
         "react",
@@ -226,8 +226,8 @@
       "name": "supabase-postgres-best-practices",
       "description": "",
       "categories": [
-        "database",
-        "development-tools"
+        "databases",
+        "development"
       ],
       "tags": [
         "postgres",
@@ -255,8 +255,8 @@
       "name": "web-design-guidelines",
       "description": "",
       "categories": [
-        "creative-design",
-        "development-tools"
+        "creativity",
+        "development"
       ],
       "tags": [
         "ui",

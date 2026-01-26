@@ -3,9 +3,18 @@
  * 
  * Generates dist/index.json from all skill.yaml files in the skills/ directory.
  * This creates the full registry manifest that the website consumes.
+ * 
+ * Directory Structure:
+ * - skills/{org}/{repo}/{skill-name}/skill.yaml  -> External skills (YAML pointers)
+ * - skills/openagentskills/{skill-name}/skill.yaml -> Internal skills (YAML pointers)
+ * - openagentskills/{skill-name}/SKILL.md -> Internal skill content (implementation)
+ * 
+ * Output paths exclude the 'skills/' prefix for cleaner URLs:
+ * - skills/expo/skills/app-design/skill.yaml -> expo/skills/app-design
+ * - skills/openagentskills/git-workflow/skill.yaml -> openagentskills/git-workflow
  */
 
-import { readFileSync, writeFileSync, readdirSync, statSync, existsSync } from 'fs';
+import { readFileSync, writeFileSync, readdirSync, existsSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { parse as parseYaml } from 'yaml';
@@ -23,7 +32,7 @@ const REGISTRY_REPO_URL = 'https://github.com/openagenthub/openagentskills-regis
 
 interface SkillYaml {
   source: {
-    type: 'external' | 'local';
+    type: 'external' | 'internal';
     path?: string;
     ref?: string;
   };
@@ -50,7 +59,7 @@ interface IndexSkill {
   categories: string[];
   tags: string[];
   source: {
-    type: 'external' | 'local';
+    type: 'external' | 'internal';
     org?: string;
     repo?: string;
     path?: string;
@@ -80,7 +89,7 @@ interface RegistryIndex {
 }
 
 /**
- * Recursively find all skill.yaml files
+ * Recursively find all skill.yaml files in a directory
  */
 function findSkillYamls(dir: string, basePath = ''): string[] {
   const files: string[] = [];
@@ -107,6 +116,7 @@ function findSkillYamls(dir: string, basePath = ''): string[] {
 
 /**
  * Parse skill path from file path
+ * Removes the 'skills/' prefix and '/skill.yaml' suffix
  * 
  * skills/anthropics/skills/pdf/skill.yaml -> anthropics/skills/pdf
  * skills/openagentskills/frontend-design/skill.yaml -> openagentskills/frontend-design
@@ -131,8 +141,8 @@ function loadCategories(): Map<string, { name: string; description: string; icon
 }
 
 /**
- * Parse SKILL.md frontmatter for local skills
- * Returns name, description, license, compatibility from frontmatter
+ * Parse SKILL.md frontmatter for internal skills
+ * Internal skill content lives in openagentskills/{skill-name}/SKILL.md
  */
 interface SkillFrontmatter {
   name: string;
@@ -181,7 +191,7 @@ async function buildIndex(): Promise<void> {
   // Load categories
   const categoriesMap = loadCategories();
   
-  // Find all skill.yaml files
+  // Find all skill.yaml files in skills/ directory
   const skillFiles = findSkillYamls(SKILLS_DIR);
   console.log(`Found ${skillFiles.length} skill(s)\n`);
   
@@ -189,6 +199,7 @@ async function buildIndex(): Promise<void> {
   const categoryCounts = new Map<string, number>();
   
   for (const filePath of skillFiles) {
+    // Parse skill path (without skills/ prefix)
     const skillPath = parseSkillPath(filePath);
     console.log(`Processing: ${skillPath}`);
     
@@ -200,11 +211,11 @@ async function buildIndex(): Promise<void> {
       const parts = skillPath.split('/');
       const org = parts[0];
       const isInternal = org === 'openagentskills';
-      const skillName = parts.slice(1).join('/'); // e.g., "frontend-design" or deeper paths
       
-      // For internal skills, read SKILL.md frontmatter to get name/description
+      // For internal skills, get the skill name and read SKILL.md from openagentskills/
       let frontmatter: SkillFrontmatter | null = null;
       if (isInternal) {
+        const skillName = parts.slice(1).join('/'); // e.g., "frontend-design"
         frontmatter = parseSkillMd(skillName);
       }
       
@@ -217,7 +228,7 @@ async function buildIndex(): Promise<void> {
         categories: yaml.categories,
         tags: yaml.tags,
         source: isInternal 
-          ? { type: 'local' }
+          ? { type: 'internal' }
           : {
               type: 'external',
               org,

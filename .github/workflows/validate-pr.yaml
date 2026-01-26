@@ -51,10 +51,10 @@ jobs:
             SKILL_PATH=$(echo "$file" | sed 's|^skills/||' | sed 's|/skill\.yaml$||')
             echo "Skill path: $SKILL_PATH"
             
-            # Check if internal skill (has SKILL.md in openagentskills/)
-            SKILL_NAME=$(echo "$SKILL_PATH" | cut -d'/' -f2-)
+            # Check if internal skill (needs SKILL.md from openagentskills/)
             LOCAL_MD="null"
             if [[ "$SKILL_PATH" == openagentskills/* ]]; then
+              SKILL_NAME=$(echo "$SKILL_PATH" | sed 's|^openagentskills/||')
               MD_PATH="openagentskills/${SKILL_NAME}/SKILL.md"
               if [[ -f "$MD_PATH" ]]; then
                 LOCAL_MD=$(cat "$MD_PATH" | jq -Rs .)

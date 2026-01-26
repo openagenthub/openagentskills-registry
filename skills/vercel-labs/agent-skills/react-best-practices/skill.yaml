@@ -7,7 +7,7 @@ source:
   ref: main
 
 categories:
-  - development-tools
+  - development
 
 tags:
   - react

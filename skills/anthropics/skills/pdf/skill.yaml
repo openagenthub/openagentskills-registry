@@ -7,7 +7,7 @@ source:
   ref: main
 
 categories:
-  - document-processing
+  - documents
 
 tags:
   - pdf

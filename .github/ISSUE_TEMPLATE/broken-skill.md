@@ -12,7 +12,7 @@ assignees: ''
 <!-- e.g., anthropics/skills/pdf-parsing -->
 
 **Skill URL:**
-<!-- e.g., https://openagentskills.org/skills/anthropics/skills/pdf-parsing -->
+<!-- e.g., https://openagentskills.org/anthropics/skills/pdf-parsing -->
 
 ## Problem Description
 

@@ -1,9 +1,9 @@
 source:
-  type: local
+  type: internal
 
 categories:
-  - development-tools
-  - creative-design
+  - development
+  - creativity
 
 tags:
   - frontend

@@ -1,53 +1,54 @@
 # Category Definitions for Open Agent Skills Registry
 # These categories help users discover skills by their primary use case
+# Designed for AI agents/assistants across all domains, not just coding
 
 categories:
-  - id: document-processing
-    name: Document Processing
-    description: Work with PDFs, Word docs, spreadsheets, and presentations
-    icon: file-text
-
-  - id: creative-design
-    name: Creative & Design
-    description: Generate images, SVGs, UI components, and visual content
-    icon: palette
-
-  - id: development-tools
-    name: Development Tools
-    description: Code generation, git workflows, testing, and deployment
+  - id: development
+    name: Development
+    description: Code generation, APIs, git workflows, testing, and debugging
     icon: code
 
-  - id: data-analysis
-    name: Data & Analysis
-    description: Process data, analyze patterns, create visualizations
+  - id: databases
+    name: Databases
+    description: SQL, NoSQL, queries, migrations, and optimization
+    icon: database
+
+  - id: cloud-services
+    name: Cloud Services
+    description: AWS, GCP, Azure, deployment, and infrastructure
+    icon: cloud
+
+  - id: productivity
+    name: Productivity
+    description: Task management, automation, workflows, and time-saving tools
+    icon: zap
+
+  - id: marketing
+    name: Marketing
+    description: SEO, social media, content strategy, analytics, and campaigns
+    icon: megaphone
+
+  - id: creativity
+    name: Creativity
+    description: Design, images, writing, video, audio, and content creation
+    icon: palette
+
+  - id: data-analytics
+    name: Data & Analytics
+    description: Charts, reports, insights, visualization, and data processing
     icon: bar-chart
 
   - id: integrations
     name: Integrations
-    description: MCP servers, API connectors, third-party services
+    description: Third-party APIs, webhooks, connectors, and service connections
     icon: plug
-
-  - id: productivity
-    name: Productivity
-    description: Task management, automation, workflow optimization
-    icon: zap
 
   - id: communication
     name: Communication
-    description: Email drafting, documentation, technical writing
+    description: Email, chat, documentation, and collaboration tools
     icon: message-square
 
-  - id: database
-    name: Database
-    description: SQL, NoSQL, query optimization, schema design
-    icon: database
-
-  - id: deployment
-    name: Deployment
-    description: CI/CD, cloud platforms, infrastructure as code
-    icon: cloud
-
-  - id: testing
-    name: Testing
-    description: Unit tests, integration tests, test automation
-    icon: check-circle
+  - id: documents
+    name: Documents
+    description: PDFs, Word docs, Excel, presentations, and file conversion
+    icon: file-text
