@@ -1,0 +1,17 @@
+# Vercel Web Design Guidelines
+# Source: https://github.com/vercel-labs/agent-skills/tree/main/skills/web-design-guidelines
+
+source:
+  type: external
+  path: skills/web-design-guidelines
+  ref: main
+
+categories:
+  - creative-design
+  - development-tools
+
+tags:
+  - ui
+  - accessibility
+  - design
+  - ux

@@ -1,0 +1,11 @@
+source:
+  type: local
+
+categories:
+  - development-tools
+
+tags:
+  - git
+  - version-control
+  - workflow
+  - commits

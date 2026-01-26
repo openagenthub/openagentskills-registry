@@ -1,0 +1,13 @@
+source:
+  type: local
+
+categories:
+  - development-tools
+  - creative-design
+
+tags:
+  - frontend
+  - ui
+  - css
+  - tailwind
+  - responsive

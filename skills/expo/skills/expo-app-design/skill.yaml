@@ -1,0 +1,17 @@
+# Expo App Design
+# Source: https://github.com/expo/skills/tree/main/plugins/expo-app-design
+
+source:
+  type: external
+  path: plugins/expo-app-design
+  ref: main
+
+categories:
+  - development-tools
+  - deployment
+
+tags:
+  - expo
+  - react-native
+  - mobile
+  - app

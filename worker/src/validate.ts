@@ -1,0 +1,117 @@
+import { parse as parseYaml } from 'yaml';
+import type { SkillYaml } from './types';
+
+const VALID_CATEGORIES = [
+  'document-processing',
+  'creative-design',
+  'development-tools',
+  'data-analysis',
+  'integrations',
+  'productivity',
+  'communication',
+  'database',
+  'deployment',
+  'testing',
+];
+
+const TAG_PATTERN = /^[a-z][a-z0-9-]*$/;
+const MAX_TAG_LENGTH = 30;
+
+/**
+ * Validates the skill YAML content against our schema
+ */
+export function validateSkillSchema(yamlContent: string): SkillYaml {
+  let parsed: unknown;
+  
+  try {
+    parsed = parseYaml(yamlContent);
+  } catch (e) {
+    throw new Error(`Invalid YAML syntax: ${e instanceof Error ? e.message : 'Unknown error'}`);
+  }
+
+  if (!parsed || typeof parsed !== 'object') {
+    throw new Error('YAML must be an object');
+  }
+
+  const skill = parsed as Record<string, unknown>;
+
+  // Validate source
+  if (!skill.source || typeof skill.source !== 'object') {
+    throw new Error('Missing required field: source');
+  }
+
+  const source = skill.source as Record<string, unknown>;
+  
+  if (!source.type || (source.type !== 'external' && source.type !== 'local')) {
+    throw new Error('source.type must be "external" or "local"');
+  }
+
+  if (source.type === 'external') {
+    if (!source.path || typeof source.path !== 'string') {
+      throw new Error('External skills require source.path');
+    }
+    // Validate path format
+    if (!/^[a-zA-Z0-9._/-]+$/.test(source.path)) {
+      throw new Error('source.path contains invalid characters');
+    }
+  }
+
+  // Validate categories
+  if (!Array.isArray(skill.categories)) {
+    throw new Error('Missing required field: categories (must be an array)');
+  }
+
+  if (skill.categories.length < 1 || skill.categories.length > 3) {
+    throw new Error('categories must have 1-3 items');
+  }
+
+  for (const cat of skill.categories) {
+    if (typeof cat !== 'string') {
+      throw new Error('Each category must be a string');
+    }
+    if (!VALID_CATEGORIES.includes(cat)) {
+      throw new Error(`Invalid category: "${cat}". Valid categories: ${VALID_CATEGORIES.join(', ')}`);
+    }
+  }
+
+  // Check for duplicates
+  if (new Set(skill.categories).size !== skill.categories.length) {
+    throw new Error('categories must not contain duplicates');
+  }
+
+  // Validate tags
+  if (!Array.isArray(skill.tags)) {
+    throw new Error('Missing required field: tags (must be an array)');
+  }
+
+  if (skill.tags.length < 1 || skill.tags.length > 5) {
+    throw new Error('tags must have 1-5 items');
+  }
+
+  for (const tag of skill.tags) {
+    if (typeof tag !== 'string') {
+      throw new Error('Each tag must be a string');
+    }
+    if (!TAG_PATTERN.test(tag)) {
+      throw new Error(`Invalid tag format: "${tag}". Must be lowercase alphanumeric with hyphens, starting with a letter`);
+    }
+    if (tag.length > MAX_TAG_LENGTH) {
+      throw new Error(`Tag "${tag}" exceeds maximum length of ${MAX_TAG_LENGTH}`);
+    }
+  }
+
+  // Check for duplicates
+  if (new Set(skill.tags).size !== skill.tags.length) {
+    throw new Error('tags must not contain duplicates');
+  }
+
+  return {
+    source: {
+      type: source.type as 'external' | 'local',
+      path: source.path as string | undefined,
+      ref: (source.ref as string) || 'main',
+    },
+    categories: skill.categories as string[],
+    tags: skill.tags as string[],
+  };
+}

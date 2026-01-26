@@ -1,0 +1,39 @@
+# Auto-labeling configuration for PRs
+# Used by actions/labeler
+
+category/document-processing:
+  - changed-files:
+    - any-glob-to-any-file: 'skills/**/document-processing/**'
+
+category/development-tools:
+  - changed-files:
+    - any-glob-to-any-file: 'skills/**/development-tools/**'
+
+category/creative-design:
+  - changed-files:
+    - any-glob-to-any-file: 'skills/**/creative-design/**'
+
+category/database:
+  - changed-files:
+    - any-glob-to-any-file: 'skills/**/database/**'
+
+internal-skill:
+  - changed-files:
+    - any-glob-to-any-file: 'skills/openagentskills/**'
+    - any-glob-to-any-file: 'openagentskills/**'
+
+external-skill:
+  - changed-files:
+    - any-glob-to-any-file: 'skills/anthropics/**'
+    - any-glob-to-any-file: 'skills/vercel-labs/**'
+    - any-glob-to-any-file: 'skills/supabase/**'
+    - any-glob-to-any-file: 'skills/expo/**'
+
+skill-yaml:
+  - changed-files:
+    - any-glob-to-any-file: 'skills/**/skill.yaml'
+
+documentation:
+  - changed-files:
+    - any-glob-to-any-file: '**/*.md'
+    - any-glob-to-any-file: 'docs/**'

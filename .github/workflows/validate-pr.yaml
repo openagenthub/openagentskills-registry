@@ -1,0 +1,98 @@
+name: Validate PR
+
+on:
+  pull_request:
+    paths:
+      - 'skills/**'
+      - 'openagentskills/**'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Get changed files
+        id: changed
+        uses: dorny/paths-filter@v3
+        with:
+          list-files: json
+          filters: |
+            skills:
+              - 'skills/**/skill.yaml'
+            content:
+              - 'openagentskills/**/SKILL.md'
+
+      - name: Validate changed skills via Worker
+        if: steps.changed.outputs.skills == 'true'
+        env:
+          WORKER_URL: ${{ secrets.VALIDATION_WORKER_URL }}
+        run: |
+          echo "Validating changed skills..."
+          echo "Changed files: ${{ steps.changed.outputs.skills_files }}"
+          
+          # Parse JSON array of files
+          FILES='${{ steps.changed.outputs.skills_files }}'
+          
+          for file in $(echo "$FILES" | jq -r '.[]'); do
+            echo "::group::Validating $file"
+            
+            # Extract skill path: skills/anthropics/skills/pdf/skill.yaml -> anthropics/skills/pdf
+            SKILL_PATH=$(echo "$file" | sed 's|^skills/||' | sed 's|/skill\.yaml$||')
+            echo "Skill path: $SKILL_PATH"
+            
+            # Check if internal skill (has SKILL.md in openagentskills/)
+            SKILL_NAME=$(echo "$SKILL_PATH" | cut -d'/' -f2-)
+            LOCAL_MD="null"
+            if [[ "$SKILL_PATH" == openagentskills/* ]]; then
+              MD_PATH="openagentskills/${SKILL_NAME}/SKILL.md"
+              if [[ -f "$MD_PATH" ]]; then
+                LOCAL_MD=$(cat "$MD_PATH" | jq -Rs .)
+              fi
+            fi
+            
+            # Read YAML content
+            YAML_CONTENT=$(cat "$file" | jq -Rs .)
+            
+            # Call worker
+            RESPONSE=$(curl -sf -X POST "$WORKER_URL/api/validate" \
+              -H "Content-Type: application/json" \
+              -d "{
+                \"skillPath\": \"$SKILL_PATH\",
+                \"yamlContent\": $YAML_CONTENT,
+                \"localSkillMd\": $LOCAL_MD
+              }")
+            
+            SUCCESS=$(echo "$RESPONSE" | jq -r '.success')
+            if [[ "$SUCCESS" != "true" ]]; then
+              ERROR=$(echo "$RESPONSE" | jq -r '.error')
+              echo "::error file=$file::Validation failed: $ERROR"
+              exit 1
+            fi
+            
+            # Show warnings
+            echo "$RESPONSE" | jq -r '.warnings[]?' 2>/dev/null | while read -r warning; do
+              echo "::warning file=$file::$warning"
+            done
+            
+            echo "✅ Valid"
+            echo "::endgroup::"
+          done
+
+      - name: Lint commit messages
+        uses: wagoid/commitlint-github-action@v6
+
+      - name: Label PR
+        uses: actions/labeler@v5
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}

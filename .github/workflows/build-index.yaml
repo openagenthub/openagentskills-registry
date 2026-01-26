@@ -1,0 +1,73 @@
+name: Build Index
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'skills/**'
+      - 'openagentskills/**'
+      - 'categories.yaml'
+
+# CRITICAL: Prevent race conditions on dist/index.json
+concurrency:
+  group: index-build
+  cancel-in-progress: false  # Queue, don't cancel
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Get changed skills
+        id: changed
+        uses: dorny/paths-filter@v3
+        with:
+          list-files: json
+          filters: |
+            skills:
+              - 'skills/**/skill.yaml'
+
+      - name: Update metadata for changed skills
+        if: steps.changed.outputs.skills == 'true'
+        env:
+          WORKER_URL: ${{ secrets.VALIDATION_WORKER_URL }}
+        run: |
+          npm run update-metadata -- '${{ steps.changed.outputs.skills_files }}'
+
+      - name: Rebuild full index
+        run: npm run build:index
+
+      - name: Commit changes
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: 'chore: rebuild registry index'
+          file_pattern: 'dist/* skills/**/*.yaml'
+
+      - name: Trigger web rebuild
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.CROSS_REPO_PAT }}
+          repository: openagenthub/openagentskills-web
+          event-type: registry-updated
+
+  notify-discord:
+    needs: build
+    if: failure()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Notify failure
+        run: |
+          echo "Index build failed - add Discord/Slack notification here"

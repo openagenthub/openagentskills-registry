@@ -1,0 +1,16 @@
+# Anthropic DOCX Skill
+# Source: https://github.com/anthropics/skills/tree/main/skills/docx
+
+source:
+  type: external
+  path: skills/docx
+  ref: main
+
+categories:
+  - document-processing
+
+tags:
+  - word
+  - docx
+  - documents
+  - editing

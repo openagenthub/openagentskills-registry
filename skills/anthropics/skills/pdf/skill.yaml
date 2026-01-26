@@ -1,0 +1,16 @@
+# Anthropic PDF Skill
+# Source: https://github.com/anthropics/skills/tree/main/skills/pdf
+
+source:
+  type: external
+  path: skills/pdf
+  ref: main
+
+categories:
+  - document-processing
+
+tags:
+  - pdf
+  - extraction
+  - forms
+  - documents

@@ -1,0 +1,17 @@
+{
+  "totalSkills": 9,
+  "totalCategories": 5,
+  "byCategory": {
+    "document-processing": 2,
+    "development-tools": 7,
+    "deployment": 1,
+    "creative-design": 2,
+    "database": 1
+  },
+  "byStatus": {
+    "active": 9,
+    "deprecated": 0,
+    "broken": 0
+  },
+  "lastUpdated": "2026-01-26T18:56:19.389Z"
+}

@@ -1,0 +1,62 @@
+name: Daily Validation
+
+on:
+  schedule:
+    - cron: '0 6 * * *'  # 6 AM UTC
+  workflow_dispatch:
+
+concurrency:
+  group: daily-validation
+  cancel-in-progress: true
+
+jobs:
+  validate-all:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate ALL skills via Worker batch endpoint
+        id: validate
+        env:
+          WORKER_URL: ${{ secrets.VALIDATION_WORKER_URL }}
+        run: |
+          npm run validate:all 2>&1 | tee validation.log
+          
+          # Check for broken skills
+          BROKEN_COUNT=$(grep -c "status.*broken" validation.log || echo "0")
+          echo "broken_count=$BROKEN_COUNT" >> $GITHUB_OUTPUT
+
+      - name: Rebuild index with updated statuses
+        run: npm run build:index
+
+      - name: Commit status updates
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: 'chore: daily validation update'
+          file_pattern: 'skills/**/*.yaml dist/*'
+
+      - name: Create issue for broken skills
+        if: steps.validate.outputs.broken_count > 0
+        uses: peter-evans/create-issue-from-file@v5
+        with:
+          title: '🔗 Broken Skills Detected (${{ steps.validate.outputs.broken_count }})'
+          content-filepath: validation.log
+          labels: broken-link, maintenance
+
+      - name: Trigger web rebuild
+        if: always()
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.CROSS_REPO_PAT }}
+          repository: openagenthub/openagentskills-web
+          event-type: registry-updated

@@ -1,0 +1,16 @@
+# Vercel React Best Practices
+# Source: https://github.com/vercel-labs/agent-skills/tree/main/skills/react-best-practices
+
+source:
+  type: external
+  path: skills/react-best-practices
+  ref: main
+
+categories:
+  - development-tools
+
+tags:
+  - react
+  - nextjs
+  - performance
+  - best-practices

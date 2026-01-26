@@ -1,0 +1,18 @@
+# Supabase Postgres Best Practices
+# Source: https://github.com/supabase/agent-skills/tree/main/skills/supabase-postgres-best-practices
+
+source:
+  type: external
+  path: skills/supabase-postgres-best-practices
+  ref: main
+
+categories:
+  - database
+  - development-tools
+
+tags:
+  - postgres
+  - sql
+  - supabase
+  - performance
+  - optimization
