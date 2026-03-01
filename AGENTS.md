@@ -2,14 +2,13 @@
 
 ## Project Overview
 
-A PR-based skill registry for AI agents. No database - pure YAML files validated via Cloudflare Worker.
+A PR-based skill registry for AI agents. YAML files in git define what skills exist; dynamic metadata lives in Cloudflare KV.
 
 **Key files:**
 - `skills/{org}/{repo}/**/skill.yaml` - External skill YAML pointers
 - `skills/openagentskills/**/skill.yaml` - Internal skill YAML pointers
 - `openagentskills/**/SKILL.md` - Internal skill implementations
-- `dist/index.json` - Generated manifest
-- `worker/` - Cloudflare Worker for validation
+- `worker/` - Cloudflare Worker (validation + registry API + KV storage)
 
 ## Tech Stack
 
@@ -17,11 +16,11 @@ A PR-based skill registry for AI agents. No database - pure YAML files validated
 |---------|------------|
 | Runtime | Node.js 20 |
 | Package Manager | npm |
-| Schema Validation | Ajv |
 | YAML Parsing | yaml |
-| Frontmatter | gray-matter |
 | Worker Framework | Hono |
 | Worker Runtime | Cloudflare Workers |
+| Metadata Store | Cloudflare KV |
+| Testing | Vitest |
 | Commit Linting | commitlint + husky |
 
 ## Project Structure
@@ -38,10 +37,21 @@ openagentskills-registry/
 │   └── {skill-name}/
 │       ├── SKILL.md               # Required: Skill content
 │       └── ...                    # Optional: Additional skill files
-├── worker/                        # Cloudflare Worker
-├── scripts/                       # Build and validation scripts
+├── worker/                        # Cloudflare Worker (validation + API)
+│   └── src/
+│       ├── index.ts               # Hono app, all endpoints
+│       ├── validate.ts            # YAML schema validation
+│       ├── kv.ts                  # KV read/write utilities
+│       ├── github.ts              # GitHub API helpers
+│       ├── frontmatter.ts         # SKILL.md frontmatter parser
+│       ├── utils.ts               # Hash, path parsing, delay
+│       └── types.ts               # Shared type definitions
+├── scripts/                       # CI/CD scripts
+│   ├── validate-changed.ts        # PR validation (persist=false)
+│   ├── sync-registry.ts           # Post-merge + daily sync (persist=true)
+│   └── call-worker.ts             # Manual CLI utility
 ├── schemas/                       # JSON Schema for validation
-└── dist/                          # Generated output
+└── .github/workflows/             # GitHub Actions
 ```
 
 ## STRICT Directory Rules
@@ -50,7 +60,7 @@ openagentskills-registry/
 - **ONLY** contains `skill.yaml` files
 - **NEVER** put SKILL.md or any skill content here
 - Structure mirrors the URL path (minus the `skills/` prefix)
-- Example: `skills/expo/skills/app-design/skill.yaml` → URL: `/expo/skills/app-design`
+- Example: `skills/expo/skills/app-design/skill.yaml` -> URL: `/expo/skills/app-design`
 
 ### `openagentskills/` Directory (at root)
 - **ONLY** contains internal skill implementations
@@ -63,6 +73,20 @@ The `skills/` prefix is stripped from URLs:
 - File: `skills/anthropics/skills/pdf/skill.yaml`
 - URL: `openagentskills.org/anthropics/skills/pdf`
 - CLI: `openskills install anthropics/skills/pdf`
+
+## Architecture: Static vs Dynamic Data
+
+**Static (in git, contributor-owned):**
+- `skill.yaml` files with `source`, `categories`, `tags`
+- `SKILL.md` files for internal skills
+- `categories.yaml`
+
+**Dynamic (in Cloudflare KV, worker-managed):**
+- `name`, `description`, `license`, `compatibility` (from SKILL.md frontmatter)
+- `lastValidated`, `lastCommit`, `contentHash`, `status`
+- Pre-built manifest for GET /api/skills
+
+**Why:** Avoids noisy auto-commits, keeps git history clean, prevents merge conflicts on metadata fields, and makes the registry API always serve fresh data.
 
 ## Coding Standards
 
@@ -118,7 +142,7 @@ type(scope): description
 feat(skills): add anthropics/skills/pdf-parsing
 fix(worker): handle missing SKILL.md gracefully
 chore(deps): update ajv to 8.17.1
-ci(actions): add concurrency lock to build-index
+ci(actions): update sync-registry workflow
 ```
 
 ## Testing Requirements
@@ -127,12 +151,11 @@ ci(actions): add concurrency lock to build-index
 
 Required for:
 - `worker/src/*.ts` - All worker functions
-- `scripts/*.ts` - Build and validation scripts
+- `scripts/*.ts` - CI/CD scripts
 
 Use **Vitest** for testing:
 
 ```typescript
-// worker/src/__tests__/validate.test.ts
 import { describe, it, expect } from 'vitest';
 import { validateSkillSchema } from '../validate';
 
@@ -141,39 +164,17 @@ describe('validateSkillSchema', () => {
     const yaml = `
 source:
   type: external
-  path: public/pdf
+  url: https://github.com/anthropics/skills
+  path: skills/pdf
 categories:
-  - document-processing
+  - documents
 tags:
   - pdf
 `;
     expect(() => validateSkillSchema(yaml)).not.toThrow();
   });
-
-  it('rejects skill with too many categories', () => {
-    const yaml = `
-source:
-  type: external
-  path: test
-categories:
-  - a
-  - b
-  - c
-  - d
-tags:
-  - test
-`;
-    expect(() => validateSkillSchema(yaml)).toThrow(/maxItems/);
-  });
 });
 ```
-
-### Integration Tests
-
-Required for:
-- Worker endpoint responses
-- GitHub API mocking
-- Index generation
 
 ### Test Commands
 
@@ -190,9 +191,7 @@ npm run test:coverage # Coverage report
 | Library | Purpose | Docs |
 |---------|---------|------|
 | `hono` | Worker framework | https://hono.dev |
-| `ajv` | JSON Schema validation | https://ajv.js.org |
 | `yaml` | YAML parsing | https://eemeli.org/yaml |
-| `gray-matter` | Frontmatter parsing | https://github.com/jonschlinkert/gray-matter |
 | `vitest` | Testing | https://vitest.dev |
 
 ## GitHub Actions
@@ -202,87 +201,41 @@ Use well-established actions:
 - `actions/setup-node@v4`
 - `actions/labeler@v5`
 - `dorny/paths-filter@v3`
-- `stefanzweifel/git-auto-commit-action@v5`
+- `peter-evans/repository-dispatch@v3`
 - `googleapis/release-please-action@v4`
-
-## Common Patterns
-
-### Validating a Skill
-
-```typescript
-import Ajv from 'ajv';
-import { parse } from 'yaml';
-import schema from '../schemas/skill.schema.json';
-
-const ajv = new Ajv();
-const validate = ajv.compile(schema);
-
-export function validateSkillSchema(yamlContent: string) {
-  const data = parse(yamlContent);
-  if (!validate(data)) {
-    throw new Error(ajv.errorsText(validate.errors));
-  }
-  return data;
-}
-```
-
-### Fetching from GitHub
-
-```typescript
-export async function fetchFromGitHub(
-  org: string,
-  repo: string,
-  path: string,
-  ref: string,
-  token: string
-): Promise<string> {
-  const url = `https://api.github.com/repos/${org}/${repo}/contents/${path}?ref=${ref}`;
-  const res = await fetch(url, {
-    headers: {
-      'Accept': 'application/vnd.github.v3.raw',
-      'Authorization': `Bearer ${token}`,
-      'User-Agent': 'OpenAgentSkills'
-    }
-  });
-  
-  if (!res.ok) {
-    throw new Error(`GitHub fetch failed: ${res.status}`);
-  }
-  
-  return res.text();
-}
-```
 
 ## What NOT to Do
 
-- ❌ Don't add `repoStars` to YAML (website handles this)
-- ❌ Don't skip schema validation
-- ❌ Don't use `any` types
-- ❌ Don't commit without running tests
-- ❌ Don't bypass concurrency controls
-- ❌ Don't use non-conventional commit messages
-- ❌ Don't use outdated/unpopular GitHub Actions
-- ❌ **Don't put SKILL.md files in the `skills/` directory**
-- ❌ **Don't put skill.yaml files in the root `openagentskills/` directory**
+- Do NOT add `_meta` or dynamic metadata to skill.yaml files
+- Do NOT add `repoStars` to YAML (website handles this)
+- Do NOT skip schema validation
+- Do NOT use `any` types
+- Do NOT commit without running tests
+- Do NOT bypass concurrency controls
+- Do NOT use non-conventional commit messages
+- Do NOT put SKILL.md files in the `skills/` directory
+- Do NOT put skill.yaml files in the root `openagentskills/` directory
+- Do NOT auto-commit back to the repo from GitHub Actions
 
 ## Quick Reference
 
 ```bash
 # Development
 npm install           # Install deps
-npm run dev           # Watch mode (scripts)
-npm run worker:dev    # Worker dev server
+cd worker && npm install && cd ..  # Worker deps
+cd worker && npm run dev  # Worker dev server
 
 # Testing
 npm test              # Run tests
 npm run lint          # Lint code
 npm run typecheck     # Type checking
 
-# Building
-npm run build:index   # Generate dist/index.json
-npm run build:worker  # Build worker
+# Validation (manual)
+WORKER_URL=... npx tsx scripts/call-worker.ts skills/path/to/skill.yaml
 
-# Validation
-npm run validate:changed -- <files>   # Validate specific files
-npm run validate:all                  # Validate all skills
+# Sync (manual, persist=true)
+WORKER_URL=... npm run sync-registry
+
+# Sync changed only
+WORKER_URL=... npm run sync-registry -- --changed-only '["skills/path/to/skill.yaml"]'
 ```

@@ -1,3 +1,14 @@
+/**
+ * GitHub API helpers for fetching skill content from external repositories.
+ *
+ * Used during validation to:
+ * 1. Fetch SKILL.md from the source repo (to extract name/description)
+ * 2. Fetch the last commit date for the skill path (for freshness tracking)
+ * 3. Check if a repository exists (for broken-link detection)
+ *
+ * All calls use the GITHUB_TOKEN from the worker environment for auth.
+ */
+
 import type { Env } from './types';
 
 interface FetchParams {
@@ -7,9 +18,7 @@ interface FetchParams {
   ref: string;
 }
 
-/**
- * Fetch SKILL.md content from GitHub
- */
+/** Fetch raw SKILL.md content from a GitHub repository. */
 export async function fetchSkillMd(params: FetchParams, env: Env): Promise<string> {
   const { org, repo, path, ref } = params;
   

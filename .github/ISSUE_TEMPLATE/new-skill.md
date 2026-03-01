@@ -18,7 +18,7 @@ assignees: ''
 <!-- e.g., public/pdf -->
 
 **Categories:**
-<!-- Choose 1-3 from: document-processing, creative-design, development-tools, data-analysis, integrations, productivity, communication, database, deployment, testing -->
+<!-- Choose 1-3 from: development, databases, cloud-services, productivity, marketing, creativity, data-analytics, integrations, communication, documents -->
 
 **Tags:**
 <!-- 1-5 lowercase tags, e.g., pdf, extraction, forms -->

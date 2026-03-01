@@ -1,8 +1,19 @@
+# Daily Validation
+#
+# Runs at 6 AM UTC every day (and on manual dispatch). Validates ALL skills
+# in the registry via the Cloudflare Worker, persists results to KV, and
+# rebuilds the manifest.
+#
+# If any skills are broken (e.g. SKILL.md deleted from source repo), a
+# GitHub issue is created so maintainers can follow up.
+#
+# No files are committed back to the repo -- all dynamic state lives in KV.
+
 name: Daily Validation
 
 on:
   schedule:
-    - cron: '0 6 * * *'  # 6 AM UTC
+    - cron: '0 6 * * *'
   workflow_dispatch:
 
 concurrency:
@@ -25,31 +36,20 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Validate ALL skills via Worker batch endpoint
+      - name: Validate all skills (persist to KV)
         id: validate
         env:
           WORKER_URL: ${{ secrets.VALIDATION_WORKER_URL }}
         run: |
-          npm run validate:all 2>&1 | tee validation.log
-          
-          # Check for broken skills
-          BROKEN_COUNT=$(grep -c "status.*broken" validation.log || echo "0")
+          npm run sync-registry 2>&1 | tee validation.log
+          BROKEN_COUNT=$(grep -c "FAIL:" validation.log || echo "0")
           echo "broken_count=$BROKEN_COUNT" >> $GITHUB_OUTPUT
 
-      - name: Rebuild index with updated statuses
-        run: npm run build:index
-
-      - name: Commit status updates
-        uses: stefanzweifel/git-auto-commit-action@v5
-        with:
-          commit_message: 'chore: daily validation update'
-          file_pattern: 'skills/**/*.yaml dist/*'
-
       - name: Create issue for broken skills
-        if: steps.validate.outputs.broken_count > 0
+        if: steps.validate.outputs.broken_count != '0'
         uses: peter-evans/create-issue-from-file@v5
         with:
-          title: '🔗 Broken Skills Detected (${{ steps.validate.outputs.broken_count }})'
+          title: 'Broken Skills Detected (${{ steps.validate.outputs.broken_count }})'
           content-filepath: validation.log
           labels: broken-link, maintenance
 

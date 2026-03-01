@@ -2,39 +2,45 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://openagentskills.org/schemas/skill.schema.json",
   "title": "Open Agent Skill",
-  "description": "Schema for skill.yaml files in the Open Agent Skills registry",
+  "description": "Schema for skill.yaml files in the Open Agent Skills registry. These files are static, contributor-owned pointers. Dynamic metadata (name, description, timestamps, status) is stored in Cloudflare KV, not in the YAML.",
   "type": "object",
   "required": ["source", "categories", "tags"],
   "properties": {
     "source": {
       "type": "object",
-      "description": "Defines where the skill content is located",
+      "description": "Defines where the skill content (SKILL.md) is located",
       "required": ["type"],
       "oneOf": [
         {
           "properties": {
-            "type": { 
+            "type": {
               "const": "external",
-              "description": "Skill content is in an external GitHub repository"
+              "description": "Skill content lives in an external GitHub repository"
             },
-            "path": { 
+            "url": {
+              "type": "string",
+              "format": "uri",
+              "pattern": "^https://github\\.com/[a-zA-Z0-9._-]+/[a-zA-Z0-9._-]+$",
+              "description": "GitHub repository URL (e.g. https://github.com/anthropics/skills)"
+            },
+            "path": {
               "type": "string",
               "description": "Path within the source repo to the SKILL.md directory",
               "pattern": "^[a-zA-Z0-9._/-]+$"
             },
-            "ref": { 
-              "type": "string", 
+            "ref": {
+              "type": "string",
               "default": "main",
-              "description": "Git reference (branch, tag, or commit)"
+              "description": "Git reference (branch, tag, or commit SHA)"
             }
           },
-          "required": ["type", "path"]
+          "required": ["type", "url", "path"]
         },
         {
           "properties": {
-            "type": { 
+            "type": {
               "const": "internal",
-              "description": "Skill content is in the openagentskills/ directory of this registry (SKILL.md in same dir as skill.yaml)"
+              "description": "Skill content lives in openagentskills/{skill-name}/SKILL.md in this registry"
             }
           },
           "required": ["type"]
@@ -43,7 +49,7 @@
     },
     "categories": {
       "type": "array",
-      "description": "Categories this skill belongs to (1-3)",
+      "description": "Categories this skill belongs to (1-3). Must match IDs in categories.yaml.",
       "items": {
         "type": "string",
         "enum": [
@@ -66,62 +72,15 @@
     "tags": {
       "type": "array",
       "description": "Searchable tags for the skill (1-5)",
-      "items": { 
-        "type": "string", 
+      "items": {
+        "type": "string",
         "pattern": "^[a-z][a-z0-9-]*$",
         "maxLength": 30,
-        "description": "Lowercase alphanumeric with hyphens"
+        "description": "Lowercase alphanumeric with hyphens, starting with a letter"
       },
       "minItems": 1,
       "maxItems": 5,
       "uniqueItems": true
-    },
-    "_meta": {
-      "type": "object",
-      "description": "Auto-populated metadata by Cloudflare Worker - DO NOT EDIT MANUALLY",
-      "properties": {
-        "name": {
-          "type": "string",
-          "description": "Skill name from SKILL.md frontmatter"
-        },
-        "description": {
-          "type": "string",
-          "description": "Skill description from SKILL.md frontmatter"
-        },
-        "license": {
-          "type": ["string", "null"],
-          "description": "License from SKILL.md frontmatter"
-        },
-        "compatibility": {
-          "type": ["string", "null"],
-          "description": "Compatibility requirements from SKILL.md frontmatter"
-        },
-        "repoUrl": {
-          "type": "string",
-          "format": "uri",
-          "description": "GitHub repository URL"
-        },
-        "lastCommit": {
-          "type": ["string", "null"],
-          "format": "date-time",
-          "description": "Last commit date for external skills"
-        },
-        "lastValidated": {
-          "type": "string",
-          "format": "date-time",
-          "description": "When the skill was last validated"
-        },
-        "contentHash": {
-          "type": "string",
-          "pattern": "^sha256:[a-f0-9]{64}$",
-          "description": "SHA256 hash of skill content for change detection"
-        },
-        "status": {
-          "type": "string",
-          "enum": ["active", "deprecated", "broken"],
-          "description": "Current status of the skill"
-        }
-      }
     }
   },
   "additionalProperties": false

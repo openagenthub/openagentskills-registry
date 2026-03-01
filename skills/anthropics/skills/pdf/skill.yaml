@@ -1,8 +1,6 @@
-# Anthropic PDF Skill
-# Source: https://github.com/anthropics/skills/tree/main/skills/pdf
-
 source:
   type: external
+  url: https://github.com/anthropics/skills
   path: skills/pdf
   ref: main
 

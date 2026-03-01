@@ -1,7 +1,8 @@
 # Dependencies
 node_modules/
 
-# Build outputs (but keep dist/ tracked for generated index)
+# Build outputs
+dist/
 *.tsbuildinfo
 
 # Environment

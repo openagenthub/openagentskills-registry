@@ -1,8 +1,6 @@
-# Expo App Design
-# Source: https://github.com/expo/skills/tree/main/plugins/expo-app-design
-
 source:
   type: external
+  url: https://github.com/expo/skills
   path: plugins/expo-app-design
   ref: main
 

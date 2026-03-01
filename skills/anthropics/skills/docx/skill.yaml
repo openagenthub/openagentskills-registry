@@ -1,8 +1,6 @@
-# Anthropic DOCX Skill
-# Source: https://github.com/anthropics/skills/tree/main/skills/docx
-
 source:
   type: external
+  url: https://github.com/anthropics/skills
   path: skills/docx
   ref: main
 

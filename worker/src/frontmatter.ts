@@ -1,16 +1,20 @@
+/**
+ * SKILL.md frontmatter parser.
+ *
+ * Implements a lightweight YAML frontmatter parser instead of pulling in
+ * gray-matter to keep the worker bundle small. Handles the subset of YAML
+ * needed for the agentskills.io specification: simple key-value pairs,
+ * quoted strings, and multiline (| / >) values.
+ *
+ * Required frontmatter fields per spec: name, description.
+ * Optional: version, license, compatibility, metadata.
+ */
+
 import type { SkillFrontmatter } from './types';
 
 /**
- * Parse YAML frontmatter from SKILL.md content
- * 
- * Expects format:
- * ---
- * name: skill-name
- * description: Skill description
- * license: MIT
- * ---
- * 
- * # Skill Content
+ * Parse YAML frontmatter from SKILL.md content.
+ * Throws if the required `name` or `description` fields are missing.
  */
 export function parseFrontmatter(content: string): SkillFrontmatter {
   // Match frontmatter between --- markers

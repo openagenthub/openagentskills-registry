@@ -1,3 +1,9 @@
+# Validate PR
+#
+# Runs on every pull request that touches skill.yaml or SKILL.md files.
+# Validates changed skills via the Cloudflare Worker (persist=false, so
+# nothing is written to KV). Fails the check if any skill is invalid.
+
 name: Validate PR
 
 on:
@@ -33,61 +39,12 @@ jobs:
             content:
               - 'openagentskills/**/SKILL.md'
 
-      - name: Validate changed skills via Worker
+      - name: Validate changed skills
         if: steps.changed.outputs.skills == 'true'
         env:
           WORKER_URL: ${{ secrets.VALIDATION_WORKER_URL }}
-        run: |
-          echo "Validating changed skills..."
-          echo "Changed files: ${{ steps.changed.outputs.skills_files }}"
-          
-          # Parse JSON array of files
-          FILES='${{ steps.changed.outputs.skills_files }}'
-          
-          for file in $(echo "$FILES" | jq -r '.[]'); do
-            echo "::group::Validating $file"
-            
-            # Extract skill path: skills/anthropics/skills/pdf/skill.yaml -> anthropics/skills/pdf
-            SKILL_PATH=$(echo "$file" | sed 's|^skills/||' | sed 's|/skill\.yaml$||')
-            echo "Skill path: $SKILL_PATH"
-            
-            # Check if internal skill (needs SKILL.md from openagentskills/)
-            LOCAL_MD="null"
-            if [[ "$SKILL_PATH" == openagentskills/* ]]; then
-              SKILL_NAME=$(echo "$SKILL_PATH" | sed 's|^openagentskills/||')
-              MD_PATH="openagentskills/${SKILL_NAME}/SKILL.md"
-              if [[ -f "$MD_PATH" ]]; then
-                LOCAL_MD=$(cat "$MD_PATH" | jq -Rs .)
-              fi
-            fi
-            
-            # Read YAML content
-            YAML_CONTENT=$(cat "$file" | jq -Rs .)
-            
-            # Call worker
-            RESPONSE=$(curl -sf -X POST "$WORKER_URL/api/validate" \
-              -H "Content-Type: application/json" \
-              -d "{
-                \"skillPath\": \"$SKILL_PATH\",
-                \"yamlContent\": $YAML_CONTENT,
-                \"localSkillMd\": $LOCAL_MD
-              }")
-            
-            SUCCESS=$(echo "$RESPONSE" | jq -r '.success')
-            if [[ "$SUCCESS" != "true" ]]; then
-              ERROR=$(echo "$RESPONSE" | jq -r '.error')
-              echo "::error file=$file::Validation failed: $ERROR"
-              exit 1
-            fi
-            
-            # Show warnings
-            echo "$RESPONSE" | jq -r '.warnings[]?' 2>/dev/null | while read -r warning; do
-              echo "::warning file=$file::$warning"
-            done
-            
-            echo "✅ Valid"
-            echo "::endgroup::"
-          done
+          CHANGED_FILES: ${{ steps.changed.outputs.skills_files }}
+        run: npm run validate:changed
 
       - name: Lint commit messages
         uses: wagoid/commitlint-github-action@v6

@@ -1,17 +1,30 @@
+/**
+ * Skill YAML schema validation.
+ *
+ * Validates contributor-submitted skill.yaml files against the registry schema.
+ * Categories must match the canonical list in categories.yaml at the repo root.
+ * Source types: "external" (points to another GitHub repo) or "internal"
+ * (SKILL.md lives inside this registry under openagentskills/).
+ */
+
 import { parse as parseYaml } from 'yaml';
 import type { SkillYaml } from './types';
 
+/**
+ * Canonical category IDs -- kept in sync with categories.yaml.
+ * If a new category is added there, it must be added here too.
+ */
 const VALID_CATEGORIES = [
-  'document-processing',
-  'creative-design',
-  'development-tools',
-  'data-analysis',
-  'integrations',
+  'development',
+  'databases',
+  'cloud-services',
   'productivity',
+  'marketing',
+  'creativity',
+  'data-analytics',
+  'integrations',
   'communication',
-  'database',
-  'deployment',
-  'testing',
+  'documents',
 ];
 
 const TAG_PATTERN = /^[a-z][a-z0-9-]*$/;
@@ -42,15 +55,20 @@ export function validateSkillSchema(yamlContent: string): SkillYaml {
 
   const source = skill.source as Record<string, unknown>;
   
-  if (!source.type || (source.type !== 'external' && source.type !== 'local')) {
-    throw new Error('source.type must be "external" or "local"');
+  if (!source.type || (source.type !== 'external' && source.type !== 'internal')) {
+    throw new Error('source.type must be "external" or "internal"');
   }
 
   if (source.type === 'external') {
+    if (!source.url || typeof source.url !== 'string') {
+      throw new Error('External skills require source.url (GitHub repository URL)');
+    }
+    if (!/^https:\/\/github\.com\/[a-zA-Z0-9._-]+\/[a-zA-Z0-9._-]+$/.test(source.url)) {
+      throw new Error('source.url must be a valid GitHub repository URL (https://github.com/{org}/{repo})');
+    }
     if (!source.path || typeof source.path !== 'string') {
       throw new Error('External skills require source.path');
     }
-    // Validate path format
     if (!/^[a-zA-Z0-9._/-]+$/.test(source.path)) {
       throw new Error('source.path contains invalid characters');
     }
@@ -107,7 +125,8 @@ export function validateSkillSchema(yamlContent: string): SkillYaml {
 
   return {
     source: {
-      type: source.type as 'external' | 'local',
+      type: source.type as 'external' | 'internal',
+      url: source.url as string | undefined,
       path: source.path as string | undefined,
       ref: (source.ref as string) || 'main',
     },

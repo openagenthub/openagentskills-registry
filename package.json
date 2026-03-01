@@ -4,10 +4,12 @@
   "description": "Community-driven registry for AI agent skills",
   "type": "module",
   "scripts": {
-    "build:index": "tsx scripts/build-index.ts",
-    "validate:all": "tsx scripts/validate-all.ts",
-    "update-metadata": "tsx scripts/update-metadata.ts",
+    "validate:changed": "tsx scripts/validate-changed.ts",
+    "sync-registry": "tsx scripts/sync-registry.ts",
     "call-worker": "tsx scripts/call-worker.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
     "prepare": "husky",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit"
@@ -23,13 +25,16 @@
   "devDependencies": {
     "@commitlint/cli": "^19.0.0",
     "@commitlint/config-conventional": "^19.0.0",
+    "@eslint/js": "^9.39.3",
     "@types/node": "^20.11.0",
+    "@vitest/coverage-v8": "^4.0.18",
     "ajv": "^8.12.0",
     "eslint": "^9.0.0",
     "gray-matter": "^4.0.3",
     "husky": "^9.0.0",
     "tsx": "^4.7.0",
     "typescript": "^5.3.0",
+    "vitest": "^4.0.18",
     "yaml": "^2.3.4"
   },
   "engines": {

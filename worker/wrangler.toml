@@ -1,16 +1,39 @@
+# OpenAgentSkills Validation & Registry Worker
+#
+# This worker serves two roles:
+# 1. Validates skill.yaml submissions (called by GitHub Actions on PR / merge)
+# 2. Serves the registry API (GET /api/skills, etc.) consumed by the website and CLI
+#
+# Dynamic metadata (name, description, timestamps, status) is stored in the
+# SKILLS_KV namespace, NOT in the git repository.
+
 name = "openagentskills-validation"
 main = "src/index.ts"
 compatibility_date = "2024-09-25"
 
-# Environment variables (set via wrangler secret)
-# GITHUB_TOKEN - GitHub Personal Access Token for API calls
+# Secrets (set via `wrangler secret put`):
+#   GITHUB_TOKEN - GitHub PAT for fetching SKILL.md from external repos
 
 [vars]
 ENVIRONMENT = "production"
 
-# Dev environment overrides
+# KV namespace for skill metadata and the pre-built registry manifest.
+# Create with: wrangler kv namespace create SKILLS_KV
+# Then paste the id below.
+[[kv_namespaces]]
+binding = "SKILLS_KV"
+id = ""
+
+# ── Dev environment ──────────────────────────────────────────────────────────
+
 [env.dev]
 name = "openagentskills-validation-dev"
 
 [env.dev.vars]
 ENVIRONMENT = "development"
+
+# Dev KV namespace (uses --local by default with wrangler dev)
+# Create with: wrangler kv namespace create SKILLS_KV --preview
+[[env.dev.kv_namespaces]]
+binding = "SKILLS_KV"
+id = ""

@@ -1,4 +1,13 @@
-name: Build Index
+# Sync Registry
+#
+# Runs after a push to main that changes skill.yaml files or categories.yaml.
+# Validates changed skills via the Cloudflare Worker with persist=true (writes
+# to KV), syncs categories, and rebuilds the manifest.
+#
+# Unlike the old build-index.yaml this workflow does NOT auto-commit anything
+# back to the repo. All dynamic data lives in Cloudflare KV.
+
+name: Sync Registry
 
 on:
   push:
@@ -8,19 +17,16 @@ on:
       - 'openagentskills/**'
       - 'categories.yaml'
 
-# CRITICAL: Prevent race conditions on dist/index.json
 concurrency:
-  group: index-build
-  cancel-in-progress: false  # Queue, don't cancel
+  group: registry-sync
+  cancel-in-progress: false
 
 jobs:
-  build:
+  sync:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -31,7 +37,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Get changed skills
+      - name: Get changed skill files
         id: changed
         uses: dorny/paths-filter@v3
         with:
@@ -39,35 +45,34 @@ jobs:
           filters: |
             skills:
               - 'skills/**/skill.yaml'
+            categories:
+              - 'categories.yaml'
 
-      - name: Update metadata for changed skills
+      - name: Sync changed skills to KV
         if: steps.changed.outputs.skills == 'true'
         env:
           WORKER_URL: ${{ secrets.VALIDATION_WORKER_URL }}
         run: |
-          npm run update-metadata -- '${{ steps.changed.outputs.skills_files }}'
+          npm run sync-registry -- --changed-only '${{ steps.changed.outputs.skills_files }}'
 
-      - name: Rebuild full index
-        run: npm run build:index
-
-      - name: Commit changes
-        uses: stefanzweifel/git-auto-commit-action@v5
-        with:
-          commit_message: 'chore: rebuild registry index'
-          file_pattern: 'dist/* skills/**/*.yaml'
+      - name: Full sync (categories changed)
+        if: steps.changed.outputs.categories == 'true' && steps.changed.outputs.skills != 'true'
+        env:
+          WORKER_URL: ${{ secrets.VALIDATION_WORKER_URL }}
+        run: npm run sync-registry
 
       - name: Trigger web rebuild
+        if: always()
         uses: peter-evans/repository-dispatch@v3
         with:
           token: ${{ secrets.CROSS_REPO_PAT }}
           repository: openagenthub/openagentskills-web
           event-type: registry-updated
 
-  notify-discord:
-    needs: build
+  notify:
+    needs: sync
     if: failure()
     runs-on: ubuntu-latest
     steps:
       - name: Notify failure
-        run: |
-          echo "Index build failed - add Discord/Slack notification here"
+        run: echo "Registry sync failed -- add Discord/Slack notification here"

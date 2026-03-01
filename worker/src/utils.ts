@@ -1,6 +1,12 @@
 /**
- * Compute SHA256 hash of content
+ * Shared utility functions for the registry worker.
+ *
+ * - computeHash: content-addressable hashing for change detection
+ * - parseSkillPath: extracts org/repo/skillName from the registry path convention
+ * - delay: simple rate-limit helper for GitHub API calls
  */
+
+/** Compute a hex-encoded SHA-256 hash using the Web Crypto API. */
 export async function computeHash(content: string): Promise<string> {
   const encoder = new TextEncoder();
   const data = encoder.encode(content);
