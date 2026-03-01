@@ -1,0 +1,92 @@
+name: Deploy Worker
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "worker/src/**"
+      - "worker/wrangler.toml"
+      - "worker/package.json"
+      - ".github/workflows/deploy-worker.yaml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  # Prevent overlapping deployments to the same worker.
+  group: worker-deploy-main
+  cancel-in-progress: false
+
+jobs:
+  verify-worker:
+    name: Verify Worker
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install root dependencies
+        run: npm ci
+
+      - name: Install worker dependencies
+        run: npm ci
+        working-directory: worker
+
+      - name: Typecheck worker
+        run: npm run typecheck
+        working-directory: worker
+
+      - name: Run test suite
+        run: npm test
+
+  deploy-dev:
+    name: Deploy to Dev Worker
+    runs-on: ubuntu-latest
+    needs: verify-worker
+    environment:
+      name: dev
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Deploy dev environment
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: "worker"
+          command: deploy --env dev
+          secrets: |
+            GITHUB_TOKEN
+        env:
+          GITHUB_TOKEN: ${{ secrets.WORKER_GITHUB_TOKEN }}
+
+  deploy-prod:
+    name: Deploy to Prod Worker
+    runs-on: ubuntu-latest
+    needs: deploy-dev
+    # Configure required reviewers on this environment in GitHub settings.
+    environment:
+      name: prod
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Deploy prod environment
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: "worker"
+          command: deploy
+          secrets: |
+            GITHUB_TOKEN
+        env:
+          GITHUB_TOKEN: ${{ secrets.WORKER_GITHUB_TOKEN }}

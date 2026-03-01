@@ -15,14 +15,14 @@ compatibility_date = "2024-09-25"
 #   GITHUB_TOKEN - GitHub PAT for fetching SKILL.md from external repos
 
 [vars]
-ENVIRONMENT = "production"
+ENVIRONMENT = "prod"
 
 # KV namespace for skill metadata and the pre-built registry manifest.
 # Create with: wrangler kv namespace create SKILLS_KV
 # Then paste the id below.
 [[kv_namespaces]]
 binding = "SKILLS_KV"
-id = ""
+id = "8d3d2074eab542bdb14d5e787ff5aef7"
 
 # ── Dev environment ──────────────────────────────────────────────────────────
 
@@ -30,10 +30,10 @@ id = ""
 name = "openagentskills-validation-dev"
 
 [env.dev.vars]
-ENVIRONMENT = "development"
+ENVIRONMENT = "dev"
 
 # Dev KV namespace (uses --local by default with wrangler dev)
 # Create with: wrangler kv namespace create SKILLS_KV --preview
 [[env.dev.kv_namespaces]]
 binding = "SKILLS_KV"
-id = ""
+id = "1c5193684203457089b175fea2b5cb05"

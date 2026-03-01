@@ -19,6 +19,10 @@ This repository contains the skill registry for [Open Agent Skills](https://open
 Contributor submits PR (skill.yaml)
         |
         v
+GitHub Action: commitlint
+  - Validates commit messages (Conventional Commits)
+        |
+        v
 GitHub Action: validate-pr
   - Validates YAML schema
   - Worker fetches SKILL.md, extracts name/description
@@ -112,12 +116,46 @@ npm test
 npm run lint
 ```
 
+## Worker Deployment
+
+Worker deployment is CI-only (no local deploy step is required).
+
+### Deployment flow
+
+- On merge to `main` with worker changes, GitHub Actions deploys to the **dev worker** automatically.
+- After dev deploy succeeds, the workflow waits for **approval** on the `prod` GitHub Environment.
+- Once approved, the same workflow deploys to the **prod worker**.
+
+### Required GitHub setup
+
+Add repository secrets:
+
+- `CLOUDFLARE_API_TOKEN` -- token with Workers deploy permissions
+- `CLOUDFLARE_ACCOUNT_ID` -- Cloudflare account ID
+
+Create GitHub Environments:
+
+- `dev` -- no approval required
+- `prod` -- require reviewers (this is the manual promotion gate)
+
 ## Validation
 
 Skills are validated at three stages:
 - **On PR**: Only changed skills (persist=false, validation check only)
 - **On merge**: Changed skills synced to KV (persist=true)
 - **Daily at 6 AM UTC**: All skills re-validated, broken ones flagged
+
+Commit messages are validated at two stages:
+- **Locally (recommended)**: Husky `commit-msg` hook runs commitlint after `npm install`
+- **In CI (required)**: `commitlint` workflow validates all commits on both PRs and pushes
+
+## Releases
+
+Releases are batched and maintainer-controlled:
+- Merges to `main` **do not** automatically create a release.
+- Maintainers run the **Release** workflow manually (`workflow_dispatch`) when ready to cut a release.
+- Release Please creates or updates a Release PR that contains version bumps, changelog updates, and release notes content.
+- After the Release PR is reviewed and merged, run the **Release** workflow again to publish the Git tag and GitHub Release.
 
 ## API Endpoints
 

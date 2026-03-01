@@ -1,12 +1,21 @@
 name: Release
 
 on:
-  push:
-    branches: [main]
+  workflow_dispatch:
+    inputs:
+      target_branch:
+        description: "Branch to run Release Please against"
+        required: true
+        default: "main"
+        type: string
 
 permissions:
   contents: write
   pull-requests: write
+
+concurrency:
+  group: release-please-${{ github.event.inputs.target_branch || 'main' }}
+  cancel-in-progress: false
 
 jobs:
   release:
@@ -15,11 +24,6 @@ jobs:
       - name: Release Please
         uses: googleapis/release-please-action@v4
         with:
-          release-type: node
-          changelog-types: |
-            [
-              {"type": "feat", "section": "Features"},
-              {"type": "fix", "section": "Bug Fixes"},
-              {"type": "chore", "section": "Maintenance"},
-              {"type": "docs", "section": "Documentation"}
-            ]
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+          target-branch: ${{ github.event.inputs.target_branch || 'main' }}
