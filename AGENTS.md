@@ -21,7 +21,7 @@ A PR-based skill registry for AI agents. YAML files in git define what skills ex
 | Worker Runtime | Cloudflare Workers |
 | Metadata Store | Cloudflare KV |
 | Testing | Vitest |
-| Commit Linting | commitlint + husky |
+| Commit Linting | commitlint + husky + GitHub Actions |
 
 ## Project Structure
 
@@ -145,6 +145,10 @@ chore(deps): update ajv to 8.17.1
 ci(actions): update sync-registry workflow
 ```
 
+**Enforcement:**
+- Local: Husky `commit-msg` hook runs commitlint on every commit.
+- CI: `.github/workflows/commitlint.yaml` validates commit messages for all PRs and pushes.
+
 ## Testing Requirements
 
 ### Unit Tests
@@ -202,7 +206,22 @@ Use well-established actions:
 - `actions/labeler@v5`
 - `dorny/paths-filter@v3`
 - `peter-evans/repository-dispatch@v3`
+- `cloudflare/wrangler-action@v3`
 - `googleapis/release-please-action@v4`
+
+### Release Policy
+
+- Do not trigger releases on every merge to `main`.
+- Use `.github/workflows/release.yaml` via `workflow_dispatch` to create or update a Release PR.
+- Release PRs batch merged changes until maintainers approve and merge them.
+- After merging the Release PR, run the same release workflow again to publish the Git tag and GitHub Release.
+
+### Worker Deployment Policy
+
+- Worker deployments are CI/CD only through GitHub Actions.
+- Do not deploy worker changes manually from local machines.
+- `dev` deploys automatically on merge to `main` when worker files change.
+- `prod` deploy requires approval via GitHub Environment protection rules.
 
 ## What NOT to Do
 
@@ -238,4 +257,7 @@ WORKER_URL=... npm run sync-registry
 
 # Sync changed only
 WORKER_URL=... npm run sync-registry -- --changed-only '["skills/path/to/skill.yaml"]'
+
+# Release (manual, batched)
+gh workflow run release.yaml -f target_branch=main
 ```

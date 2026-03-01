@@ -46,9 +46,6 @@ jobs:
           CHANGED_FILES: ${{ steps.changed.outputs.skills_files }}
         run: npm run validate:changed
 
-      - name: Lint commit messages
-        uses: wagoid/commitlint-github-action@v6
-
       - name: Label PR
         uses: actions/labeler@v5
         with:
